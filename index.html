@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+  />
+  <title>DyStream</title>
+
+  <link rel="preconnect" href="https://image.tmdb.org" />
+  <link rel="stylesheet" href="./css/main.css" />
+  <link rel="stylesheet" href="./css/components.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="site-header" id="siteHeader">
+      <div class="header-left">
+        <a href="#" class="brand" id="brandLink" aria-label="DyStream Home">
+          <span class="brand-mark">D</span>
+          <span class="brand-text">DyStream</span>
+        </a>
+
+        <nav class="primary-nav" aria-label="Primary">
+          <a href="#" class="nav-link active">Movies</a>
+          <a href="#" class="nav-link disabled" aria-disabled="true">Series</a>
+          <a href="#" class="nav-link disabled" aria-disabled="true">TV</a>
+        </nav>
+      </div>
+
+      <div class="header-right">
+        <div class="search-box" role="search">
+          <svg viewBox="0 0 24 24" aria-hidden="true" class="search-icon">
+            <path
+              d="M10.5 3a7.5 7.5 0 1 1 0 15a7.5 7.5 0 0 1 0-15Zm0 2a5.5 5.5 0 1 0 0 11a5.5 5.5 0 0 0 0-11Zm8.914 12.5 1.414 1.414-3.2 3.2-1.414-1.414z"
+            />
+          </svg>
+          <input
+            type="text"
+            id="searchInput"
+            placeholder="Buscar películas..."
+            autocomplete="off"
+            aria-label="Buscar películas"
+          />
+          <button
+            type="button"
+            id="clearSearchBtn"
+            class="clear-search hidden"
+            aria-label="Limpiar búsqueda"
+          >
+            ✕
+          </button>
+        </div>
+
+        <label class="language-picker" for="languageSelect">
+          <span>Idioma</span>
+          <select id="languageSelect" aria-label="Seleccionar idioma">
+            <option value="es-MX">Español</option>
+            <option value="en-US">English</option>
+          </select>
+        </label>
+      </div>
+    </header>
+
+    <main class="page-content">
+      <section class="hero" id="heroSection" aria-label="Película destacada">
+        <div class="hero-backdrop" id="heroBackdrop"></div>
+        <div class="hero-overlay"></div>
+
+        <div class="hero-content container">
+          <div class="hero-copy">
+            <p class="hero-kicker">DyStream Featured</p>
+
+            <h1 class="hero-title" id="heroTitle">Cargando película destacada...</h1>
+
+            <div class="hero-meta" id="heroMeta">
+              <span class="hero-pill">TMDb</span>
+            </div>
+
+            <p class="hero-description" id="heroDescription">
+              Estamos cargando el catálogo para mostrarte lo mejor del momento.
+            </p>
+
+            <div class="hero-actions">
+              <button type="button" class="btn btn-primary" id="heroPlayBtn">
+                ▶ Ver
+              </button>
+              <button type="button" class="btn btn-secondary" id="heroInfoBtn">
+                + Mi lista
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="search-panel hidden" id="searchPanel">
+        <div class="container">
+          <div class="section-heading">
+            <div>
+              <p class="section-eyebrow">Explora</p>
+              <h2 class="section-title">Resultados de búsqueda</h2>
+            </div>
+            <p class="section-subtitle" id="searchSummary">
+              Escribe al menos 3 caracteres para buscar.
+            </p>
+          </div>
+
+          <div id="searchResultsGrid" class="search-grid"></div>
+          <div id="searchEmptyState" class="empty-state hidden"></div>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <div class="container">
+          <div class="section-heading">
+            <div>
+              <p class="section-eyebrow">Tendencias</p>
+              <h2 class="section-title">🔥 Trending ahora</h2>
+            </div>
+            <p class="section-subtitle">Lo que más se está moviendo en el catálogo.</p>
+          </div>
+
+          <div class="media-row" id="trendingRow"></div>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <div class="container">
+          <div class="section-heading">
+            <div>
+              <p class="section-eyebrow">Popular</p>
+              <h2 class="section-title">⭐ Más populares</h2>
+            </div>
+            <p class="section-subtitle">Películas que la gente sigue viendo.</p>
+          </div>
+
+          <div class="media-row" id="popularRow"></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script type="module" src="./js/app.js"></script>
+</body>
+</html>

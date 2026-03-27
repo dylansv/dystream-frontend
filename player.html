@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DyStream Player</title>
+
+  <link rel="stylesheet" href="/css/player.css" />
+
+  <style>
+    body {
+      margin: 0;
+      background: #000;
+      height: 100vh;
+      overflow: hidden;
+      font-family: Arial, sans-serif;
+    }
+
+    .player-container {
+      width: 100%;
+      height: 100%;
+      position: relative;
+    }
+
+    .player-frame {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    .loader {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: white;
+      font-size: 18px;
+      z-index: 10;
+    }
+
+    /* 🔙 BOTÓN VOLVER */
+    .back-btn {
+      position: absolute;
+      top: 50%;
+      left: 10px;
+      transform: translateY(-50%);
+      z-index: 30;
+
+      background: rgba(0,0,0,0.5);
+      border: none;
+      color: white;
+
+      padding: 12px;
+      border-radius: 50%;
+      font-size: 18px;
+      opacity: 0.7;
+    }
+
+    .back-btn:hover {
+      opacity: 1;
+      transform: translateY(-50%) scale(1.1);
+    }
+
+    /* 🔥 MODO TV (BOTÓN PLAY GRANDE) */
+    .external-player {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #000;
+      z-index: 25;
+    }
+
+    .external-player.hidden {
+      display: none;
+    }
+
+    .external-player button {
+      font-size: 26px;
+      padding: 20px 36px;
+      border-radius: 14px;
+      border: none;
+      background: #38e8ff;
+      color: #000;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 0 25px rgba(56, 232, 255, 0.5);
+    }
+
+    .external-player button:hover {
+      transform: scale(1.05);
+    }
+
+  </style>
+</head>
+
+<body>
+  <div class="player-container">
+
+    <!-- 🔙 VOLVER -->
+    <button id="back-btn" class="back-btn">←</button>
+
+    <!-- ⏳ LOADER -->
+    <div id="loader" class="loader">Cargando video...</div>
+
+    <!-- 🎬 PLAYER NORMAL -->
+    <iframe 
+      id="player-frame"
+      sandbox="allow-scripts allow-same-origin allow-forms allow-presentation"
+      class="player-frame"
+      src=""
+      frameborder="0"
+      allow="autoplay; fullscreen"
+      allowfullscreen
+      referrerpolicy="origin"
+    ></iframe>
+
+    <!-- 📺 MODO TV -->
+    <div id="external-player" class="external-player hidden">
+      <button id="play-external-btn">▶ Reproducir</button>
+    </div>
+
+  </div>
+
+  <script src="/js/player.js"></script>
+
+  <script>
+    document.getElementById("back-btn").onclick = () => {
+      window.history.back();
+    };
+  </script>
+</body>
+</html>
