@@ -12,31 +12,32 @@ function resolveApiBase() {
 }
 
 function isSmartTV() {
-  return /smart-tv|smarttv|googletv|appletv|hbbtv|netcast|tizen|webos/i.test(navigator.userAgent);
+  return /smart-tv|smarttv|googletv|appletv|hbbtv|netcast|tizen|webos|firetv|aft/i.test(
+    navigator.userAgent
+  );
 }
 
 function openDirect(url) {
   window.open(url, "_self");
 }
 
-function showExternalPlayer(url) {
-  const loader = document.getElementById("loader");
-  const external = document.getElementById("external-player");
-  const btn = document.getElementById("play-external-btn");
+function goBackSafe() {
+  if (window.history.length > 1) {
+    window.history.back();
+    return;
+  }
+  window.location.href = "/";
+}
 
-  loader.style.display = "block";
-  loader.innerText = "Abriendo reproductor...";
+function setTvFocus(elements, index) {
+  elements.forEach((el, i) => {
+    el.classList.toggle("tv-focused", i === index);
+  });
 
-  external.classList.remove("hidden");
-
-  // 🔥 AUTO REDIRECT
-  setTimeout(() => {
-    openDirect(url);
-  }, 1500);
-
-  btn.onclick = () => {
-    openDirect(url);
-  };
+  const target = elements[index];
+  if (target && typeof target.focus === "function") {
+    target.focus({ preventScroll: true });
+  }
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -51,46 +52,122 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   const iframe = document.getElementById("player-frame");
   const loader = document.getElementById("loader");
+  const backBtn = document.getElementById("back-btn");
+  const external = document.getElementById("external-player");
+  const playExternalBtn = document.getElementById("play-external-btn");
+  const backExternalBtn = document.getElementById("back-external-btn");
+
+  const tvMode = isSmartTV();
+
+  if (tvMode) {
+    document.body.classList.add("tv-mode");
+  }
+
+  backBtn.addEventListener("click", goBackSafe);
+  backExternalBtn.addEventListener("click", goBackSafe);
 
   if (!tmdbId) {
-    loader.innerText = "ID inválido";
+    loader.textContent = "ID inválido";
     return;
   }
 
+  let externalUrl = null;
+
+  function showLoader(message) {
+    loader.textContent = message || "Cargando video...";
+    loader.classList.remove("hidden");
+  }
+
+  function hideLoader() {
+    loader.classList.add("hidden");
+  }
+
+  function showExternalPlayer(url, autoOpen = false) {
+    externalUrl = url;
+    hideLoader();
+    external.classList.remove("hidden");
+
+    const focusables = [playExternalBtn, backExternalBtn];
+    let focusIndex = 0;
+    setTvFocus(focusables, focusIndex);
+
+    if (!tvMode) {
+      playExternalBtn.focus();
+    }
+
+    if (tvMode) {
+      document.addEventListener("keydown", onExternalKeydown);
+    }
+
+    playExternalBtn.onclick = () => {
+      openDirect(url);
+    };
+
+    function onExternalKeydown(e) {
+      if (external.classList.contains("hidden")) return;
+
+      if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+        e.preventDefault();
+        focusIndex = focusIndex === 0 ? 1 : 0;
+        setTvFocus(focusables, focusIndex);
+        return;
+      }
+
+      if (e.key === "Enter") {
+        e.preventDefault();
+        focusables[focusIndex]?.click();
+        return;
+      }
+
+      if (e.key === "Escape" || e.key === "Backspace") {
+        e.preventDefault();
+        goBackSafe();
+      }
+    }
+
+    if (autoOpen) {
+      setTimeout(() => {
+        openDirect(url);
+      }, 900);
+    }
+  }
+
   try {
-    const urlRequest = `${API_BASE}/watch?tmdb_id=${tmdbId}&type=${type}`;
-    console.log("📡 Fetch:", urlRequest);
+    showLoader("Cargando video...");
 
-    const res = await fetch(urlRequest);
+    const requestUrl = `${API_BASE}/watch?tmdb_id=${encodeURIComponent(tmdbId)}&type=${encodeURIComponent(type || "movie")}`;
+    console.log("📡 Fetch:", requestUrl);
 
-    // 🔥 Manejo de error HTTP
+    const res = await fetch(requestUrl, {
+      method: "GET",
+      headers: {
+        Accept: "application/json",
+      },
+    });
+
     if (!res.ok) {
+      const rawText = await res.text().catch(() => "");
+      console.error("❌ Respuesta no válida:", res.status, rawText);
       throw new Error(`HTTP ${res.status}`);
     }
 
     const data = await res.json();
 
-    if (!data.embed_url) {
+    if (!data || !data.embed_url) {
+      console.error("❌ Respuesta sin embed_url:", data);
       throw new Error("No disponible en este proveedor");
     }
 
     const url = data.embed_url;
-
     console.log("🎬 URL FINAL:", url);
     console.log("🧠 USER AGENT:", navigator.userAgent);
 
-    // ==========================================
-    // 📺 SMART TV → SIEMPRE EXTERNO
-    // ==========================================
-    if (isSmartTV()) {
+    if (tvMode) {
       console.log("📺 Smart TV detectada → externo");
-      showExternalPlayer(url);
+      showExternalPlayer(url, true);
       return;
     }
 
-    // ==========================================
-    // 💻 PC / CELULAR → iframe
-    // ==========================================
     iframe.src = url;
 
     let loaded = false;
@@ -98,25 +175,38 @@ document.addEventListener("DOMContentLoaded", async () => {
     iframe.onload = () => {
       loaded = true;
       console.log("✅ iframe cargado");
-      loader.style.display = "none";
+      hideLoader();
     };
 
-    // 🔥 fallback si iframe falla
     setTimeout(() => {
       if (!loaded) {
         console.warn("⚠️ iframe bloqueado → fallback externo");
-        showExternalPlayer(url);
+        showExternalPlayer(url, false);
       }
-    }, 4000);
-
+    }, 4500);
   } catch (err) {
     console.error("❌ ERROR PLAYER:", err);
+    loader.textContent = "Error cargando video 😢";
+  }
 
-    loader.innerText = "Error cargando video 😢";
+  if (tvMode) {
+    const mainFocusables = [backBtn];
+    let mainFocusIndex = 0;
+    setTvFocus(mainFocusables, mainFocusIndex);
 
-    // 🔥 fallback general
-    setTimeout(() => {
-      loader.innerText = "Intentando abrir reproductor...";
-    }, 1500);
+    document.addEventListener("keydown", (e) => {
+      if (!external.classList.contains("hidden")) return;
+
+      if (e.key === "Enter") {
+        e.preventDefault();
+        mainFocusables[mainFocusIndex]?.click();
+        return;
+      }
+
+      if (e.key === "Escape" || e.key === "Backspace") {
+        e.preventDefault();
+        goBackSafe();
+      }
+    });
   }
 });

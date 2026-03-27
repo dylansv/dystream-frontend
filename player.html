@@ -2,112 +2,239 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+  />
   <title>DyStream Player</title>
+
+  <script>
+    window.DYSTREAM_API_BASE = "https://dystream-backend.onrender.com";
+  </script>
 
   <link rel="stylesheet" href="/css/player.css" />
 
   <style>
+    :root {
+      --bg: #000;
+      --fg: #fff;
+      --accent: #38e8ff;
+      --accent-strong: #1fd7ef;
+      --overlay: rgba(0, 0, 0, 0.68);
+      --btn-bg: rgba(15, 20, 26, 0.92);
+      --btn-border: rgba(56, 232, 255, 0.45);
+      --focus-ring: 0 0 0 3px rgba(56, 232, 255, 0.9),
+                    0 0 28px rgba(56, 232, 255, 0.35);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
     body {
       margin: 0;
-      background: #000;
-      height: 100vh;
+      width: 100%;
+      height: 100%;
+      background: var(--bg);
+      color: var(--fg);
       overflow: hidden;
       font-family: Arial, sans-serif;
     }
 
+    body.tv-mode {
+      cursor: none;
+    }
+
     .player-container {
+      position: relative;
       width: 100%;
       height: 100%;
-      position: relative;
+      background: #000;
     }
 
     .player-frame {
       width: 100%;
       height: 100%;
       border: none;
+      background: #000;
     }
 
     .loader {
       position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      color: white;
+      inset: 0;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      text-align: center;
+      color: #fff;
       font-size: 18px;
-      z-index: 10;
+      background:
+        radial-gradient(circle at 20% 20%, rgba(56, 232, 255, 0.10), transparent 25%),
+        radial-gradient(circle at 80% 25%, rgba(120, 80, 255, 0.14), transparent 28%),
+        radial-gradient(circle at 50% 80%, rgba(56, 232, 255, 0.08), transparent 30%),
+        #000;
     }
 
-    /* 🔙 BOTÓN VOLVER */
+    .loader.hidden {
+      display: none;
+    }
+
     .back-btn {
       position: absolute;
       top: 50%;
-      left: 10px;
+      left: 14px;
       transform: translateY(-50%);
-      z-index: 30;
-
-      background: rgba(0,0,0,0.5);
-      border: none;
-      color: white;
-
-      padding: 12px;
-      border-radius: 50%;
-      font-size: 18px;
-      opacity: 0.7;
+      z-index: 40;
+      width: 54px;
+      height: 54px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 999px;
+      background: rgba(0, 0, 0, 0.55);
+      color: #fff;
+      font-size: 22px;
+      line-height: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0.9;
+      transition: transform 0.18s ease, opacity 0.18s ease, box-shadow 0.18s ease;
     }
 
-    .back-btn:hover {
+    .back-btn:hover,
+    .back-btn:focus-visible,
+    .back-btn.tv-focused {
       opacity: 1;
-      transform: translateY(-50%) scale(1.1);
+      transform: translateY(-50%) scale(1.08);
+      outline: none;
+      box-shadow: var(--focus-ring);
+      border-color: var(--accent);
     }
 
-    /* 🔥 MODO TV (BOTÓN PLAY GRANDE) */
     .external-player {
       position: absolute;
       inset: 0;
+      z-index: 35;
       display: flex;
-      justify-content: center;
       align-items: center;
-      background: #000;
-      z-index: 25;
+      justify-content: center;
+      background:
+        linear-gradient(to bottom, rgba(0, 0, 0, 0.74), rgba(0, 0, 0, 0.88)),
+        radial-gradient(circle at center, rgba(56, 232, 255, 0.08), transparent 42%);
+      padding: 24px;
     }
 
     .external-player.hidden {
       display: none;
     }
 
-    .external-player button {
-      font-size: 26px;
-      padding: 20px 36px;
-      border-radius: 14px;
-      border: none;
-      background: #38e8ff;
-      color: #000;
-      font-weight: bold;
-      cursor: pointer;
-      box-shadow: 0 0 25px rgba(56, 232, 255, 0.5);
+    .external-player__panel {
+      width: min(92vw, 720px);
+      border: 1px solid rgba(56, 232, 255, 0.16);
+      border-radius: 22px;
+      background: rgba(10, 14, 20, 0.94);
+      backdrop-filter: blur(10px);
+      padding: 28px 24px;
+      text-align: center;
+      box-shadow: 0 18px 60px rgba(0, 0, 0, 0.45);
     }
 
-    .external-player button:hover {
+    .external-player__title {
+      margin: 0 0 10px;
+      font-size: clamp(26px, 4vw, 38px);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .external-player__desc {
+      margin: 0 0 24px;
+      color: rgba(255, 255, 255, 0.76);
+      font-size: clamp(15px, 2.2vw, 18px);
+      line-height: 1.45;
+    }
+
+    .external-player__actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      justify-content: center;
+    }
+
+    .tv-btn {
+      min-width: 220px;
+      min-height: 60px;
+      border-radius: 16px;
+      border: 1px solid transparent;
+      padding: 16px 24px;
+      font-size: 20px;
+      font-weight: 800;
+      transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease, background 0.16s ease;
+      outline: none;
+    }
+
+    .tv-btn--primary {
+      background: var(--accent);
+      color: #041016;
+      box-shadow: 0 10px 30px rgba(56, 232, 255, 0.22);
+    }
+
+    .tv-btn--secondary {
+      background: var(--btn-bg);
+      color: #fff;
+      border-color: rgba(255, 255, 255, 0.14);
+    }
+
+    .tv-btn:hover,
+    .tv-btn:focus-visible,
+    .tv-btn.tv-focused {
       transform: scale(1.05);
+      box-shadow: var(--focus-ring);
+      border-color: var(--accent);
     }
 
+    @media (max-width: 720px) {
+      .back-btn {
+        top: 16px;
+        left: 16px;
+        transform: none;
+      }
+
+      .back-btn:hover,
+      .back-btn:focus-visible,
+      .back-btn.tv-focused {
+        transform: scale(1.06);
+      }
+
+      .external-player__panel {
+        padding: 22px 18px;
+      }
+
+      .tv-btn {
+        width: 100%;
+        min-width: 0;
+      }
+    }
   </style>
 </head>
 
 <body>
   <div class="player-container">
+    <button
+      id="back-btn"
+      class="back-btn"
+      type="button"
+      aria-label="Volver"
+      title="Volver"
+    >
+      ←
+    </button>
 
-    <!-- 🔙 VOLVER -->
-    <button id="back-btn" class="back-btn">←</button>
-
-    <!-- ⏳ LOADER -->
     <div id="loader" class="loader">Cargando video...</div>
 
-    <!-- 🎬 PLAYER NORMAL -->
-    <iframe 
+    <iframe
       id="player-frame"
-      sandbox="allow-scripts allow-same-origin allow-forms allow-presentation"
       class="player-frame"
       src=""
       frameborder="0"
@@ -116,19 +243,34 @@
       referrerpolicy="origin"
     ></iframe>
 
-    <!-- 📺 MODO TV -->
     <div id="external-player" class="external-player hidden">
-      <button id="play-external-btn">▶ Reproducir</button>
-    </div>
+      <div class="external-player__panel">
+        <h1 class="external-player__title">Listo para reproducir</h1>
+        <p class="external-player__desc">
+          En televisiones usamos el reproductor externo para mejor compatibilidad.
+        </p>
 
+        <div class="external-player__actions">
+          <button
+            id="play-external-btn"
+            class="tv-btn tv-btn--primary"
+            type="button"
+          >
+            ▶ Reproducir
+          </button>
+
+          <button
+            id="back-external-btn"
+            class="tv-btn tv-btn--secondary"
+            type="button"
+          >
+            ← Volver
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <script src="/js/player.js"></script>
-
-  <script>
-    document.getElementById("back-btn").onclick = () => {
-      window.history.back();
-    };
-  </script>
 </body>
 </html>

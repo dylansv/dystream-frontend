@@ -363,7 +363,8 @@
   }
 }
 
-.media-card__button:focus-visible .media-card__surface {
-  outline: 2px solid rgba(56, 232, 255, 0.9);
-  outline-offset: 2px;
+.tv-mode .media-card__button:focus-visible .media-card__surface {
+  outline: none;
+  transform: scale(1.1);
+  z-index: 50;
 }

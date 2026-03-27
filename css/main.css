@@ -547,3 +547,26 @@ img {
     grid-auto-columns: 180px;
   }
 }
+
+
+/* =========================
+   TV MODE
+========================= */
+
+.tv-mode * {
+  cursor: none !important;
+}
+
+.tv-mode .media-card__button:focus-visible .media-card__surface {
+  transform: scale(1.08);
+  box-shadow:
+    0 0 0 3px rgba(56, 232, 255, 1),
+    0 0 40px rgba(56, 232, 255, 0.35),
+    0 20px 60px rgba(0, 0, 0, 0.6);
+}
+
+/* Quitar hover en TV */
+.tv-mode .media-card__button:hover .media-card__surface {
+  transform: none;
+  border-color: inherit;
+}
