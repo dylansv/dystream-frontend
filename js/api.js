@@ -1,16 +1,22 @@
 const TMDB_IMAGE_BASE = "https://image.tmdb.org/t/p";
 
 function resolveApiBase() {
+  // 🔧 Override manual (por si luego lo quieres cambiar sin tocar código)
   const explicitBase = window.DYSTREAM_API_BASE?.trim();
   if (explicitBase) return explicitBase.replace(/\/+$/, "");
 
-  const { protocol, hostname } = window.location;
+  const { hostname } = window.location;
 
-  if (hostname === "127.0.0.1" || hostname === "localhost") {
+  // 🧪 Desarrollo local
+  if (
+    hostname === "127.0.0.1" ||
+    hostname === "localhost"
+  ) {
     return "http://127.0.0.1:8000";
   }
 
-  return `${protocol}//${hostname}:8000`;
+  // 🚀 Producción (Vercel u otro dominio)
+  return "https://dystream-backend.onrender.com";
 }
 
 const API_BASE = resolveApiBase();
