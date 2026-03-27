@@ -1,3 +1,16 @@
+function resolveApiBase() {
+  const explicitBase = window.DYSTREAM_API_BASE?.trim();
+  if (explicitBase) return explicitBase.replace(/\/+$/, "");
+
+  const { hostname } = window.location;
+
+  if (hostname === "127.0.0.1" || hostname === "localhost") {
+    return "http://127.0.0.1:8000";
+  }
+
+  return "https://dystream-backend.onrender.com";
+}
+
 function isSmartTV() {
   return /smart-tv|smarttv|googletv|appletv|hbbtv|netcast|tizen|webos/i.test(navigator.userAgent);
 }
@@ -16,12 +29,11 @@ function showExternalPlayer(url) {
 
   external.classList.remove("hidden");
 
-  // 🔥 AUTO REDIRECT (UX tipo app)
+  // 🔥 AUTO REDIRECT
   setTimeout(() => {
     openDirect(url);
   }, 1500);
 
-  // 🔥 fallback manual
   btn.onclick = () => {
     openDirect(url);
   };
@@ -29,6 +41,9 @@ function showExternalPlayer(url) {
 
 document.addEventListener("DOMContentLoaded", async () => {
   console.log("🔥 PLAYER INICIADO");
+
+  const API_BASE = resolveApiBase();
+  console.log("🌐 API_BASE:", API_BASE);
 
   const params = new URLSearchParams(window.location.search);
   const tmdbId = params.get("id");
@@ -43,7 +58,16 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   try {
-    const res = await fetch(`/watch?tmdb_id=${tmdbId}&type=${type}`);
+    const urlRequest = `${API_BASE}/watch?tmdb_id=${tmdbId}&type=${type}`;
+    console.log("📡 Fetch:", urlRequest);
+
+    const res = await fetch(urlRequest);
+
+    // 🔥 Manejo de error HTTP
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}`);
+    }
+
     const data = await res.json();
 
     if (!data.embed_url) {
@@ -56,19 +80,16 @@ document.addEventListener("DOMContentLoaded", async () => {
     console.log("🧠 USER AGENT:", navigator.userAgent);
 
     // ==========================================
-    // 📺 SMART TV → SIEMPRE EXTERNO (SOLUCIÓN REAL)
+    // 📺 SMART TV → SIEMPRE EXTERNO
     // ==========================================
     if (isSmartTV()) {
-      console.log("📺 Smart TV detectada → evitando iframe");
-
-      // ⚠️ Nunca usar iframe en TV (bloqueos de Vimeus)
+      console.log("📺 Smart TV detectada → externo");
       showExternalPlayer(url);
-
       return;
     }
 
     // ==========================================
-    // 💻 PC / CELULAR → iframe inteligente
+    // 💻 PC / CELULAR → iframe
     // ==========================================
     iframe.src = url;
 
@@ -86,11 +107,16 @@ document.addEventListener("DOMContentLoaded", async () => {
         console.warn("⚠️ iframe bloqueado → fallback externo");
         showExternalPlayer(url);
       }
-    }, 3500);
+    }, 4000);
 
   } catch (err) {
-    console.error(err);
-    const loader = document.getElementById("loader");
+    console.error("❌ ERROR PLAYER:", err);
+
     loader.innerText = "Error cargando video 😢";
+
+    // 🔥 fallback general
+    setTimeout(() => {
+      loader.innerText = "Intentando abrir reproductor...";
+    }, 1500);
   }
 });
